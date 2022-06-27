@@ -20,6 +20,9 @@ class Shooz {
   }
 
   init() {
+    this.avgRenderTimeMS = 1;
+    this.animationTime = 1;
+    this.animationDirection = 1;
     this.renderingEnabled = false;
     this.initRender = false;
     this.renderTimeout = null;
@@ -36,31 +39,33 @@ class Shooz {
     this.scene.add(this.shoeGroup);
     this.scene.add(this.camera);
 
-    const light = new HemisphereLight(0xffffff, 0x000000, 0.85);
+    const light = new HemisphereLight(0xffffff, 0x000000, 0.9);
     this.scene.add(light);
 
-    const spotLight1 = new SpotLight(0xffffff, 1.7);
-    spotLight1.position.set(-16, 1, -20);
+    const spotLight1 = new SpotLight(0xffffff, 1.9);
+    spotLight1.position.set(-32, 1, -16);
     spotLight1.castShadow = true;
     spotLight1.shadow.mapSize.width = 1024 * 2;
     spotLight1.shadow.mapSize.height = 1024 * 2;
-    spotLight1.penumbra = 0.7;
+    spotLight1.penumbra = 1.5;
     spotLight1.angle = Math.PI / 12;
     spotLight1.shadow.bias = -0.0001;
 
     const spotLight2 = new SpotLight(0xffffff, 1.2);
-    spotLight2.position.set(16, 1, -20);
+    spotLight2.position.set(16, 1, -18);
     spotLight2.castShadow = false;
-    spotLight2.penumbra = 0.4;
+    spotLight2.penumbra = 0.7;
     spotLight2.angle = Math.PI / 12;
     spotLight2.shadow.bias = -0.0001;
 
-    this.camera.add(spotLight1);
-    this.camera.add(spotLight2);
+    this.lightGroup = new Group();
+    this.lightGroup.add(spotLight1);
+    this.lightGroup.add(spotLight2);
+    this.camera.add(this.lightGroup)
 
     this.renderer = new WebGLRenderer({
       powerPreference: "high-performance",
-      antialias: true,
+      antialias: (window.devicePixelRatio > 1) ? false : true,
       alpha: true
     });
 
@@ -106,29 +111,57 @@ class Shooz {
       "https://merrell-files.s3.amazonaws.com/models/MTL-LongSky2-shadow.glb",
       () => this.initRender = true
     );
+
+    let observer = new IntersectionObserver((e) => {
+      console.log(e)
+      this.animationDirection = (e[0].isIntersecting) ? 0 : 1;
+      }, {threshold: 0.33});
+    observer.observe(this.renderer.domElement)
+
   }
 
   animate() {
     this.controls.update();
-    if (this.renderingEnabled == true || this.initRender == true) {
-      this.renderer.render(this.scene, this.camera);
-      this.initRender = false
+
+    if (this.animationTime !== this.animationDirection) {
+      const d = this.animationDirection - this.animationTime
+      this.animationTime = Math.abs(d) < 0.001 ? this.animationDirection : this.animationTime + (d * 0.03)
     }
+
+    if (this.shouldRender()) {
+      this.shoeGroup.position.x = this.lerp(0, -6, this.animationTime);
+      this.shoeGroup.rotation.y = this.lerp(0, -0.3, this.animationTime);
+
+      const start = performance.now()
+      this.renderer.render(this.scene, this.camera);
+      const end = performance.now()
+      this.avgRenderTimeMS += ((end - start) - this.avgRenderTimeMS) * 0.1
+      this.initRender = false
+
+      if (end > 5000 && this.renderer.shadowMap.enabled == true && this.avgRenderTimeMS > 10) {
+        this.renderer.shadowMap.enabled = false
+        console.log('shadow disabled')
+      }
+    }
+  }
+
+  shouldRender() {
+    return this.renderingEnabled == true 
+            || this.initRender == true
+            || ( this.animationTime !== 0 && this.animationTime !== 1 )
   }
 
   onWindowResize() {
     // const h = this.renderer.domElement.clientHeight,
     //   w = this.renderer.domElement.clientWidth;
     const h = window.innerHeight,
-      w = window.innerWidth;
+          w = window.innerWidth;
 
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    // this.camera.position.z = 24 / (w/h);
     const r = (w/h);
     const s = 56 * r;
     this.shoeGroup.scale.set(s, s, s)
-    this.camera.scale.set(r, r, r)
     this.renderer.setSize(w, h);
     this.initRender = true;
   }
@@ -139,7 +172,6 @@ class Shooz {
     dracoLoader.setDecoderPath(
       "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/js/libs/draco/"
     );
-    // https://ga.jspm.io/npm:three-stdlib@2.6.4/libs/draco
     loader.setDRACOLoader(dracoLoader);
 
     loader.load(
@@ -170,6 +202,10 @@ class Shooz {
         console.log("An error happened");
       }
     );
+  }
+
+  lerp(v0, v1, t) {
+    return v0*(1-t)+v1*t
   }
 }
 
