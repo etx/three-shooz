@@ -39,11 +39,12 @@ class Shooz {
     this.scene.add(this.shoeGroup);
     this.scene.add(this.camera);
 
-    const light = new HemisphereLight(0xffffff, 0x000000, 0.9);
+    const light = new HemisphereLight(0xffffff, 0xcccccc, 1.9);
     this.scene.add(light);
 
     const spotLight1 = new SpotLight(0xffffff, 1.9);
     spotLight1.position.set(-32, 1, -16);
+    spotLight1.target = this.shoeGroup
     spotLight1.castShadow = true;
     spotLight1.shadow.mapSize.width = 1024 * 2;
     spotLight1.shadow.mapSize.height = 1024 * 2;
@@ -53,6 +54,7 @@ class Shooz {
 
     const spotLight2 = new SpotLight(0xffffff, 1.2);
     spotLight2.position.set(16, 1, -18);
+    spotLight2.target = this.shoeGroup
     spotLight2.castShadow = false;
     spotLight2.penumbra = 0.7;
     spotLight2.angle = Math.PI / 12;
@@ -98,8 +100,8 @@ class Shooz {
 
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     // this.renderer.physicallyCorrectLights = true;
-    this.renderer.gammaOutput = true;
-    this.renderer.gammaFactor = 2.2;
+    // this.renderer.gammaOutput = true;
+    // this.renderer.gammaFactor = 2.4;
 
     this.renderer.setClearColor(0xffffff, 0);
     this.renderer.shadowMap.enabled = true;
@@ -108,7 +110,8 @@ class Shooz {
 
     this.loadGLTF(
       this.shoeGroup,
-      "https://merrell-files.s3.amazonaws.com/models/MTL-LongSky2-shadow.glb",
+      // "https://merrell-files.s3.amazonaws.com/models/MTL-LongSky2-shadow.glb",
+      "https://merrell-files.s3.amazonaws.com/models/MTL-MQM-v2.glb",
       () => this.initRender = true
     );
 
