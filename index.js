@@ -163,7 +163,7 @@ class Shooz {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     const r = (w/h);
-    const s = 56 * r;
+    const s = 46 * r;
     this.shoeGroup.scale.set(s, s, s)
     this.renderer.setSize(w, h);
     this.initRender = true;
