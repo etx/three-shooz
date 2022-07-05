@@ -39,10 +39,10 @@ class Shooz {
     this.scene.add(this.shoeGroup);
     this.scene.add(this.camera);
 
-    const light = new HemisphereLight(0xffffff, 0xcccccc, 1.9);
+    const light = new HemisphereLight(0xffffff, 0xcccccc, 1.5);
     this.scene.add(light);
 
-    const spotLight1 = new SpotLight(0xffffff, 1.9);
+    const spotLight1 = new SpotLight(0xffffff, 3.85);
     spotLight1.position.set(-32, 1, -16);
     spotLight1.target = this.shoeGroup
     spotLight1.castShadow = true;
@@ -110,13 +110,12 @@ class Shooz {
 
     this.loadGLTF(
       this.shoeGroup,
-      // "https://merrell-files.s3.amazonaws.com/models/MTL-LongSky2-shadow.glb",
-      "https://merrell-files.s3.amazonaws.com/models/MTL-MQM-v2.glb",
+      "https://merrell-files.s3.amazonaws.com/models/MTL-LongSky2-shadow.glb",
+      // "https://merrell-files.s3.amazonaws.com/models/MTL-MQM-v2.glb",
       () => this.initRender = true
     );
 
     let observer = new IntersectionObserver((e) => {
-      console.log(e)
       this.animationDirection = (e[0].isIntersecting) ? 0 : 1;
       }, {threshold: 0.33});
     observer.observe(this.renderer.domElement)
