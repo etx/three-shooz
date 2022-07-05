@@ -27,6 +27,8 @@ class Shooz {
     this.initRender = false;
     this.renderTimeout = null;
 
+    this.parent = document.querySelector(".shooz-parent")
+
     this.aspect = window.innerWidth / window.innerHeight;
     this.camera = new PerspectiveCamera(35, this.aspect, 1, 1000);
     this.camera.position.z = 24;
@@ -78,6 +80,7 @@ class Shooz {
     this.controls.target = new THREE.Vector3(0, 3, 0);
     this.controls.enableDamping = true;
     this.controls.enableZoom = false;
+    this.controls.enablePan = false;
     this.controls.addEventListener("start", () => {
       this.renderingEnabled = true;
       clearTimeout(this.renderTimeout)
@@ -88,20 +91,20 @@ class Shooz {
       }, 2400)
     });
 
-    document.body.appendChild(this.renderer.domElement).classList.add("shooz");
+    
+    this.parent.appendChild(this.renderer.domElement).classList.add("shooz");
 
     window.addEventListener("resize", this.onWindowResize);
     this.onWindowResize()
 
+    console.log(this.parent.offsetHeight, this.parent.offsetWidth)
+
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(this.parent.offsetWidth, this.parent.offsetHeight);
     this.renderer.render(this.scene, this.camera);
     this.renderer.setAnimationLoop(this.animate);
 
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    // this.renderer.physicallyCorrectLights = true;
-    // this.renderer.gammaOutput = true;
-    // this.renderer.gammaFactor = 2.4;
 
     this.renderer.setClearColor(0xffffff, 0);
     this.renderer.shadowMap.enabled = true;
@@ -154,10 +157,10 @@ class Shooz {
   }
 
   onWindowResize() {
-    // const h = this.renderer.domElement.clientHeight,
-    //   w = this.renderer.domElement.clientWidth;
-    const h = window.innerHeight,
-          w = window.innerWidth;
+    const h = this.parent.offsetHeight,
+      w = this.parent.offsetWidth;
+    // const h = window.innerHeight,
+    //       w = window.innerWidth;
 
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
