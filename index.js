@@ -25,19 +25,22 @@ class Shooz {
     this.animationDirection = 1;
     this.renderingEnabled = false;
     this.initRender = false;
+    this.modelLoaded = false;
     this.renderTimeout = null;
 
     this.parent = document.querySelector(".shooz-parent")
 
-    this.aspect = window.innerWidth / window.innerHeight;
+    this.aspect = this.parent.offsetWidth / this.parent.offsetHeight;
     this.camera = new PerspectiveCamera(35, this.aspect, 1, 1000);
     this.camera.position.z = 24;
     this.camera.position.y = 2;
 
+    this.shoeSizeScaleFactor = 42;
+
     this.scene = new Scene();
 
     this.shoeGroup = new Group();
-    this.shoeGroup.scale.set(52, 52, 52);
+    this.shoeGroup.scale.set(this.shoeSizeScaleFactor, this.shoeSizeScaleFactor, this.shoeSizeScaleFactor);
     this.scene.add(this.shoeGroup);
     this.scene.add(this.camera);
 
@@ -61,6 +64,11 @@ class Shooz {
     spotLight2.penumbra = 0.7;
     spotLight2.angle = Math.PI / 12;
     spotLight2.shadow.bias = -0.0001;
+
+    this.shadowEnabled = (t) => {
+      spotLight1.castShadow = spotLight2.castShadow = !!t
+      this.renderer.shadowMap.enabled = !!t
+    }
 
     this.lightGroup = new Group();
     this.lightGroup.add(spotLight1);
@@ -115,7 +123,10 @@ class Shooz {
       this.shoeGroup,
       "https://merrell-files.s3.amazonaws.com/models/MTL-LongSky2-shadow.glb",
       // "https://merrell-files.s3.amazonaws.com/models/MTL-MQM-v2.glb",
-      () => this.initRender = true
+      () => {
+        this.initRender = true
+        this.modelLoaded = true
+      }
     );
 
     let observer = new IntersectionObserver((e) => {
@@ -140,12 +151,13 @@ class Shooz {
       const start = performance.now()
       this.renderer.render(this.scene, this.camera);
       const end = performance.now()
-      this.avgRenderTimeMS += ((end - start) - this.avgRenderTimeMS) * 0.1
+      this.avgRenderTimeMS += ((end - start) - this.avgRenderTimeMS) * 0.06
       this.initRender = false
 
-      if (end > 5000 && this.renderer.shadowMap.enabled == true && this.avgRenderTimeMS > 10) {
-        this.renderer.shadowMap.enabled = false
-        console.log('shadow disabled')
+      if (this.modelLoaded && this.renderer.shadowMap.enabled == true && this.avgRenderTimeMS > 33) {
+        this.shadowEnabled(false)
+      } else {
+        console.log((end - start), this.avgRenderTimeMS)
       }
     }
   }
@@ -165,7 +177,7 @@ class Shooz {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     const r = (w/h);
-    const s = 46 * r;
+    const s = this.shoeSizeScaleFactor * r;
     this.shoeGroup.scale.set(s, s, s)
     this.renderer.setSize(w, h);
     this.initRender = true;
